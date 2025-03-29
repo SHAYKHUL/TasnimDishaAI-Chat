@@ -1,10 +1,10 @@
 import os
 import json
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import google.generativeai as genai
 
 # Initialize Flask app
-app = Flask(__name__)
+app = Flask(__name__, template_folder="templates")
 
 # Check if API key is available
 api_key = os.environ.get("GEMINI_API_KEY")
@@ -34,17 +34,19 @@ try:
         history=[
             {"role": "user", "parts": ["Hi there, what are you doing today?"]},
             {"role": "model", "parts": ["I'm working on improving my SEO and content marketing skills."]},
-            {"role": "user", "parts": ["What is your name?"]},
-            {"role": "model", "parts": ["My name is Tasnim Disha. I'm a digital marketer and SEO expert."]},
         ]
     )
 except Exception as e:
     raise RuntimeError(f"Error initializing generative AI model: {e}")
 
+@app.route('/')
+def home():
+    """Landing page to indicate the API is running"""
+    return render_template("index.html")
+
 @app.route('/chat', methods=['POST'])
 def chat():
     try:
-        # Validate JSON request
         if not request.is_json:
             return jsonify({'error': 'Invalid request format. Expected JSON.'}), 400
 
@@ -54,7 +56,6 @@ def chat():
         if not user_message:
             return jsonify({'error': 'Message cannot be empty'}), 400
 
-        # Send the message to the chat session
         response = chat_session.send_message(user_message)
 
         if not response or not response.text:
